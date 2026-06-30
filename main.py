@@ -62,42 +62,44 @@ class IncidentPredictor:
 predictor = IncidentPredictor()
 
 def generate_ai_message(historical_data, prediction_result, top_incident_type):
+    """Generate human-readable prediction message based on ML output"""
+    
     if prediction_result["status"] != "success":
-        return f"Collecting more data... Need at least 3 months of records. Currently have {len(historical_data)} month(s)."
+        return f"Collecting more data... Need at least 2 months of records. Currently have {len(historical_data)} month(s)."
     
     current_avg = prediction_result["current_avg"]
     predicted_avg = prediction_result["avg_predicted"]
     confidence = prediction_result["confidence"]
-    direction = prediction_result["trend_direction"]
     predicted_values = prediction_result["predicted_values"]
     
     lines = []
-    lines.append(f"<strong>Trend Analysis:</strong>")
+    lines.append(f"<strong>Trend Analysis (Linear Regression):</strong>")
     lines.append(f"Current 3-month avg: <strong>{current_avg}</strong> incidents")
     lines.append(f"Predicted 3-month avg: <strong>{predicted_avg}</strong> incidents")
     lines.append(f"Model confidence: <strong>{confidence}%</strong>")
     lines.append("")
     
-    if direction == "increasing":
+    # FIX: Compare ML prediction vs current average to determine direction
+    if predicted_avg > current_avg:
         change = predicted_avg - current_avg
         pct = ((change / current_avg) * 100) if current_avg > 0 else 0
-        lines.append(f"WARNING: Upward trend detected!")
-        lines.append(f"Expected increase: ~{abs(round(pct))}%")
-        lines.append(f"Primary concern: <strong>{top_incident_type}</strong>")
-        lines.append(f"Recommend increasing patrols and community awareness")
-    elif direction == "decreasing":
+        lines.append(f"⚠️ <strong>WARNING: Upward trend detected!</strong>")
+        lines.append(f"   Expected increase: ~{abs(round(pct))}%")
+        lines.append(f"   Primary concern: <strong>{top_incident_type}</strong>")
+        lines.append(f"   → Recommend increasing patrols and community awareness")
+    elif predicted_avg < current_avg:
         change = current_avg - predicted_avg
         pct = ((change / current_avg) * 100) if current_avg > 0 else 0
-        lines.append(f"POSITIVE: Downward trend detected!")
-        lines.append(f"Expected decrease: ~{abs(round(pct))}%")
-        lines.append(f"Current measures are effective. Continue monitoring.")
+        lines.append(f"✅ <strong>POSITIVE: Downward trend detected!</strong>")
+        lines.append(f"   Expected decrease: ~{abs(round(pct))}%")
+        lines.append(f"   → Current measures are effective. Continue monitoring.")
     else:
-        lines.append(f"STABLE: No significant change expected")
-        lines.append(f"Maintain current incident management strategies")
+        lines.append(f"ℹ️ <strong>STABLE: No significant change expected</strong>")
+        lines.append(f"   → Maintain current incident management strategies")
     
     lines.append("")
-    lines.append(f"Forecast for next 3 periods: {predicted_values}")
-    lines.append(f"Model: {prediction_result['model_used']}")
+    lines.append(f"📈 <strong>Forecast for next 3 periods:</strong> {predicted_values}")
+    lines.append(f"🤖 <strong>Model:</strong> {prediction_result['model_used']}")
     
     return "<br>".join(lines)
 

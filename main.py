@@ -21,7 +21,7 @@ class IncidentPredictor:
             "avg_predicted": 0
         }
         
-        if len(historical_data) < 2:
+        if len(historical_data) < 3:
             return result
         
         X = np.array(range(len(historical_data))).reshape(-1, 1)
